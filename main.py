@@ -5,7 +5,8 @@ import logging
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from better_profanity import profanity
-from openai import OpenAI
+from openai import OpenAIfrom flask import Flask
+from threading import Thread
 import os
 import random
 import re
@@ -28,6 +29,18 @@ intents.voice_states = True
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="$", intents=intents)
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Bot is alive"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+Thread(target=run_web).start()
 
 sniped_messages = {}
 
