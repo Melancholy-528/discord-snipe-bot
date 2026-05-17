@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from better_profanity import profanity
-from openai import OpenAIfrom flask import Flask
+from flask import Flask
 from threading import Thread
 import os
 import random
