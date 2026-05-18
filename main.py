@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
 import logging
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -9,7 +8,6 @@ from flask import Flask
 from threading import Thread
 import os
 import random
-import re
 
 load_dotenv()
 
@@ -36,114 +34,36 @@ app = Flask(__name__)
 def home():
     return "Bot is alive"
 
+@app.route("/ping")
+def ping():
+    return "OK"
+
 def run_web():
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
-Thread(target=run_web).start()
+Thread(target=run_web, daemon=True).start()
 
 sniped_messages = {}
 
-profanity.load_censor_words()
-
-TRIGGER_GROUPS = [
-    {
-        "keywords": ["weirdo"],
-        "replies": [
-            "indeed very weird mf",
-            "mute his ass",
-            "couldnt be creepier",
-            "bro stfu"
-        ]
-    },
-    {
-        "keywords": ["cya", "bye", "see you", "cu", "see u", "see ya", "goodbye", "dip"],
-        "replies": [
-            "you'll be missed",
-            "another one dead",
-            "better hide",
-            "gn dude"
-        ]
-    },
-    {
-        "keywords": ["crack"],
-        "replies": [
-            "nuhuh",
-            "that escalated quickly",
-            "i definitely heard that"
-        ]
-    },
-    {
-        "keywords": ["nut"],
-        "replies": [
-            "wild thing to say in chat",
-            "i'm pretending i didn't read that",
-            "caught in 4k"
-        ]
-    },
-    {
-        "keywords": ["fuck"],
-        "replies": [
-            "me?",
-            "yo ass needs to be quiet",
-            "shushhhh"
-        ]
-    }
+custom_words = [
+    "simp", "incel", "virgin", "beta", "douchebag", "dickhead", "asshole",
+    "bitch", "fuckboy", "slut", "whore", "cunt", "faggot", "chud", "fuck",
+    "crack", "weirdo", "loser", "trash", "garbage", "stupid", "idiot", "dumb",
+    "suck", "sucks", "sucked", "sucking", "suck my", "suck a", "suck the",
+    "suck on", "suck it", "eat my", "eat a", "eat the", "eat your", "eat that",
+    "eat this", "lick my", "lick a", "lick the", "lick your", "lick that",
+    "lick this", "blow my", "blow a", "blow the", "blow your", "blow that",
+    "blow this", "cum", "cummy", "cummies", "cumming", "cums", "cummed",
+    "cumming on", "cumming a", "cumming the", "cumming your", "cumming that",
+    "cumming this", "nut", "nuts", "nutted", "nutting", "nut on", "nut a",
+    "nut the", "nut your", "nut that", "nut this", "pussy", "pussylicker",
+    "pussylicking", "pussylicked", "pussylicks", "pussy eat", "pussy eating",
+    "pussy eaten", "pussy eat that", "pussy eat this", "pussy eat a",
+    "pussy eat the", "pussy eat your"
 ]
 
-def keyword_matches(content: str, keyword: str) -> bool:
-
-    keyword = keyword.lower()
-    content = content.lower()
-
-    if " " in keyword:
-        return keyword in content
-
-    pattern = rf"\b{re.escape(keyword)}\b"
-
-    return re.search(pattern, content) is not None
-
-def get_trigger_reply(content: str):
-
-    content = content.lower()
-
-    for group in TRIGGER_GROUPS:
-        for keyword in group["keywords"]:
-
-            if keyword_matches(content, keyword):
-                return random.choice(group["replies"])
-
-    return None
-
-@bot.event
-async def on_ready():
-    print(f"{bot.user} has connected to Discord!")
-
-@bot.event
-async def on_message_delete(message: discord.Message):
-
-    if message.author.bot or not message.guild:
-        return
-
-    content = (message.content or "").strip()
-
-    if not content:
-        return
-
-    if not profanity.contains_profanity(content):
-        return
-
-    sniped_messages[message.channel.id] = {
-        "author_name": str(message.author),
-        "author_avatar": message.author.display_avatar.url,
-        "content": content,
-        "channel_id": message.channel.id,
-        "created_at": message.created_at,
-        "deleted_at": datetime.now(timezone.utc)
-    }
-@bot.command(name="catch")
-async def catch(ctx):
-    await snipe(ctx)
+profanity.load_censor_words(custom_words)
 
 SARCASM_BANK = [
     "yeah that’s not how reality works but go off",
@@ -205,9 +125,7 @@ SARCASM_BANK = [
 ]
 
 async def generate_sarcastic_reply(user_message: str):
-
     base = random.choice(SARCASM_BANK)
-
     extra_twist = random.choice([
         "",
         " anyway...",
@@ -216,50 +134,56 @@ async def generate_sarcastic_reply(user_message: str):
         " i’m done here.",
         " please rethink that."
     ])
-
     return base + extra_twist
 
 @bot.event
-async def on_message(message: discord.Message):
+async def on_ready():
+    print(f"{bot.user} has connected to Discord!")
 
+@bot.event
+async def on_message_delete(message: discord.Message):
+    if message.author.bot or not message.guild:
+        return
+
+    content = (message.content or "").strip()
+    if not content:
+        return
+
+    if not profanity.contains_profanity(content):
+        return
+
+    sniped_messages[message.channel.id] = {
+        "author_name": str(message.author),
+        "author_avatar": message.author.display_avatar.url,
+        "content": content,
+        "channel_id": message.channel.id,
+        "created_at": message.created_at,
+        "deleted_at": datetime.now(timezone.utc)
+    }
+
+@bot.event
+async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    content = message.content.lower()
-
-    trigger_reply = get_trigger_reply(content)
-
-    if trigger_reply:
-        await message.channel.send(trigger_reply)
-
-    if bot.user in message.mentions:
-
-        cleaned = message.content
-        cleaned = cleaned.replace(f"<@{bot.user.id}>", "")
+    if bot.user.mentioned_in(message):
+        cleaned = message.content.replace(f"<@{bot.user.id}>", "")
         cleaned = cleaned.replace(f"<@!{bot.user.id}>", "")
         cleaned = cleaned.strip()
 
         if not cleaned:
-
             await message.reply(
                 "you pinged me for absolutely nothing",
                 mention_author=False
             )
-
-            return
-
-        reply = await generate_sarcastic_reply(cleaned)
-
-        await message.reply(
-            reply,
-            mention_author=False
-        )
+        else:
+            reply = await generate_sarcastic_reply(cleaned)
+            await message.reply(reply, mention_author=False)
 
     await bot.process_commands(message)
 
 @bot.command(name="snipe")
 async def snipe(ctx):
-
     data = sniped_messages.get(ctx.channel.id)
 
     if not data:
@@ -292,4 +216,8 @@ async def snipe(ctx):
 
     await ctx.send(embed=embed)
 
-bot.run(token)
+@bot.command(name="catch")
+async def catch(ctx):
+    await snipe(ctx)
+
+bot.run(token, log_handler=handler, log_level=logging.INFO)
