@@ -52,7 +52,7 @@ custom_words = [
     "crack", "weirdo", "loser", "trash", "garbage", "stupid", "idiot", "dumb",
     "suck", "sucks", "sucked", "sucking", "suck my", "suck a", "suck the",
     "suck on", "suck it", "eat my", "eat a", "eat the", "eat your", "eat that",
-    "eat this", "lick my", "lick a", "lick the", "lick your", "lick that",
+    "eat this", "lick","lick my", "lick a", "lick the", "lick your", "lick that",
     "lick this", "blow my", "blow a", "blow the", "blow your", "blow that",
     "blow this", "cum", "cummy", "cummies", "cumming", "cums", "cummed",
     "cumming on", "cumming a", "cumming the", "cumming your", "cumming that",
@@ -60,7 +60,10 @@ custom_words = [
     "nut the", "nut your", "nut that", "nut this", "pussy", "pussylicker",
     "pussylicking", "pussylicked", "pussylicks", "pussy eat", "pussy eating",
     "pussy eaten", "pussy eat that", "pussy eat this", "pussy eat a",
-    "pussy eat the", "pussy eat your"
+    "pussy eat the", "pussy eat your","betch","feet","weirdo","bih","dih"
+    "queer","tits","boobs","goon","gooner","mf","motherfucker","slave",
+    "bitch ass","sybau","fuck off","fuck you","fu","f u","sort him out"
+    "sort you out"
 ]
 
 profanity.load_censor_words(custom_words)
